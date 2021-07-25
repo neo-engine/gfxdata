@@ -1,6 +1,5 @@
 build/
 out/
-data/
 fsdata
 *_DATA
 *_NAME
