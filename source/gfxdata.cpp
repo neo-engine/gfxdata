@@ -77,6 +77,35 @@ map<string, bitmap> readPictures( const string& p_path ) {
     return res;
 }
 
+vector<vector<bitmap>> readTranslatablePictures( const string& p_path ) {
+    auto res = vector<vector<bitmap>>( );
+
+    auto tmp = readPictures( p_path );
+    for( const auto& [ id, img ] : tmp ) {
+        u32 num, lang;
+        sscanf( id.c_str( ), "%u.%u", &num, &lang );
+
+        if( num >= res.size( ) ) { res.resize( num + 10 ); }
+        if( lang >= res[ num ].size( ) ) { res[ num ].resize( lang + 10, img ); }
+        res[ num ][ lang ] = img;
+    }
+    return res;
+}
+
+vector<bitmap> readNumberedPictures( const string& p_path ) {
+    auto res = vector<bitmap>( );
+
+    auto tmp = readPictures( p_path );
+    for( const auto& [ id, img ] : tmp ) {
+        u32 num;
+        sscanf( id.c_str( ), "%u", &num );
+
+        if( num >= res.size( ) ) { res.resize( num + 10, img ); }
+        res[ num ] = img;
+    }
+    return res;
+}
+
 map<pkmnInfo, bitmap> readPKMNPictures( const string& p_path ) {
     auto tmp = readPictures( p_path );
     auto res = map<pkmnInfo, bitmap>( );
@@ -182,7 +211,6 @@ map<pkmnInfo, bitmap> readPKMNPictures( const string& p_path ) {
                     continue;
                 }
             }
-
         }
     }
     return res;

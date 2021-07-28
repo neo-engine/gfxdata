@@ -50,7 +50,9 @@ struct pkmnInfo {
     constexpr auto operator<=>( const pkmnInfo& ) const = default;
 };
 
-map<pkmnInfo, bitmap> readPKMNPictures( const string& p_path );
+vector<vector<bitmap>> readTranslatablePictures( const string& p_path );
+vector<bitmap>         readNumberedPictures( const string& p_path );
+map<pkmnInfo, bitmap>  readPKMNPictures( const string& p_path );
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
                  u8 p_frames, u8 p_threshold );

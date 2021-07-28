@@ -1,3 +1,4 @@
+NUM_LANGUAGES		?=   2
 MAX_ITEMS_PER_DIR	?=  30
 MAX_PKMN			?= 898
 ACHIEVEMENT_LEN		?= 100
@@ -19,7 +20,7 @@ BUILD       :=	build
 SOURCES     :=	source
 DATA     	:=	data
 
-CFLAGS      :=	-Wall \
+CFLAGS      :=	-Wall -DNUM_LANGUAGES=$(NUM_LANGUAGES) \
 				-DMAX_ITEMS_PER_DIR=$(MAX_ITEMS_PER_DIR) -DMAX_PKMN=$(MAX_PKMN) \
 				-DFSROOT=\"$(FSROOT)\" -DOUT=\"$(OUT)\" -g3 -ggdb
 CXXFLAGS    :=	$(CFLAGS) -std=c++2a -fsanitize=undefined
@@ -29,7 +30,7 @@ DATA_FILES	:=  $(addprefix $(DATA)/, $(foreach dir, $(DATA),$(notdir $(wildcard 
 CPPFILES	:=	gfxdata.cpp bitmap.cpp
 OFILES		:=	$(addprefix $(BUILD)/, $(CPPFILES:.cpp=.o) )
 
-fsdata: pkmnSprite
+fsdata: pkmnSprite icon
 ifdef LOCAL
 	@mkdir -p $(FSROOT)
 	@mkdir -p $(OUT)
@@ -38,17 +39,19 @@ endif
 	./pkmnSprite data/pkmn/ frnt 96 96 1
 	./pkmnSprite data/pkmn-back/ back 96 96 1
 	./pkmnSprite data/pkmn-icon/ icon 32 32 1
+	./icon data/item/ item 32 32 1
 	touch fsdata
 
 pkmnSprite: $(OFILES) $(BUILD)/pkmnSprite.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
-pkmnIcon: $(OFILES) $(BUILD)/pkmnIcon.o
+icon: $(OFILES) $(BUILD)/icon.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
 	@rm -r $(BUILD)
 	@rm pkmnSprite
+	@rm icon
 
 $(BUILD)/%.o: $(SOURCES)/%.cpp
 	@mkdir -p $(BUILD)
