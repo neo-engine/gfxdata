@@ -52,10 +52,11 @@ struct pkmnInfo {
 
 vector<vector<bitmap>> readTranslatablePictures( const string& p_path );
 vector<bitmap>         readNumberedPictures( const string& p_path );
+map<u32, bitmap>       readIndexedPictures( const string& p_path );
 map<pkmnInfo, bitmap>  readPKMNPictures( const string& p_path );
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
-                 u8 p_frames, u8 p_threshold );
+                 u8 p_frames, u8 p_threshold, bool p_rsd = false );
 
 void printPKMNPictures( const char* p_name, bool p_female, bool p_shiny,
                         map<pkmnInfo, bitmap>& p_images, u16 p_height, u16 p_width, u8 p_frames,

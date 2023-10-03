@@ -30,28 +30,37 @@ DATA_FILES	:=  $(addprefix $(DATA)/, $(foreach dir, $(DATA),$(notdir $(wildcard 
 CPPFILES	:=	gfxdata.cpp bitmap.cpp
 OFILES		:=	$(addprefix $(BUILD)/, $(CPPFILES:.cpp=.o) )
 
-fsdata: pkmnSprite icon
+fsdata: pkmnSprite icon iconArray berrytree
 ifdef LOCAL
 	@mkdir -p $(FSROOT)
 	@mkdir -p $(OUT)
 endif
 	@mkdir -p $(BUILD)
+	./berrytree data/berrytree/ BERRIES/
+	./iconArray data/tmhm/ tmhm 32 32 1
+	./icon data/item/ item 32 32 1
 	./pkmnSprite data/pkmn/ frnt 96 96 1
 	./pkmnSprite data/pkmn-back/ back 96 96 1
 	./pkmnSprite data/pkmn-icon/ icon 32 32 1
-	./icon data/item/ item 32 32 1
 	touch fsdata
 
 pkmnSprite: $(OFILES) $(BUILD)/pkmnSprite.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
+berrytree: $(OFILES) $(BUILD)/berrytree.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
 icon: $(OFILES) $(BUILD)/icon.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
+iconArray: $(OFILES) $(BUILD)/iconArray.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
 	@rm -r $(BUILD)
 	@rm pkmnSprite
 	@rm icon
+	@rm iconArray
 
 $(BUILD)/%.o: $(SOURCES)/%.cpp
 	@mkdir -p $(BUILD)

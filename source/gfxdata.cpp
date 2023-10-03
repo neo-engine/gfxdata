@@ -85,8 +85,8 @@ vector<vector<bitmap>> readTranslatablePictures( const string& p_path ) {
         u32 num, lang;
         sscanf( id.c_str( ), "%u.%u", &num, &lang );
 
-        if( num >= res.size( ) ) { res.resize( num + 10 ); }
-        if( lang >= res[ num ].size( ) ) { res[ num ].resize( lang + 10, img ); }
+        if( num >= res.size( ) ) { res.resize( num + 1 ); }
+        if( lang >= res[ num ].size( ) ) { res[ num ].resize( lang + 1, img ); }
         res[ num ][ lang ] = img;
     }
     return res;
@@ -97,10 +97,22 @@ vector<bitmap> readNumberedPictures( const string& p_path ) {
 
     auto tmp = readPictures( p_path );
     for( const auto& [ id, img ] : tmp ) {
-        u32 num;
-        sscanf( id.c_str( ), "%u", &num );
+        u32 num = 0;
+        if( !sscanf( id.c_str( ), "%u", &num ) ) { continue; }
 
         if( num >= res.size( ) ) { res.resize( num + 10, img ); }
+        res[ num ] = img;
+    }
+    return res;
+}
+
+map<u32, bitmap> readIndexedPictures( const string& p_path ) {
+    auto res = map<u32, bitmap>( );
+
+    auto tmp = readPictures( p_path );
+    for( const auto& [ id, img ] : tmp ) {
+        u32 num = 0;
+        if( !sscanf( id.c_str( ), "%u", &num ) ) { continue; }
         res[ num ] = img;
     }
     return res;
@@ -217,10 +229,10 @@ map<pkmnInfo, bitmap> readPKMNPictures( const string& p_path ) {
 }
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
-                 u8 p_frames, u8 p_threshold ) {
+                 u8 p_frames, u8 p_threshold, bool p_rsddata ) {
     u8     col   = !!p_img( 0, 0 ).m_transparent;
     size_t SCALE = 1;
-    if( p_img.m_width == 2 * p_width && p_img.m_height == 2 * p_height ) { SCALE = 2; }
+    if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
 
     u8  start                                  = 0;
     u8  image_data[ 256 * 256 * 20 / 4 + 100 ] = { 0 };
@@ -273,7 +285,6 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
                 image_data[ p_width * p_height * frame + y * p_width + x ]
                     = start + palidx[ conv_color ];
             }
-    // p_img.writeToFile( (string(p_argv[ 1 ]) + ".test.png").c_str() );
 
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
 
@@ -283,12 +294,26 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
     }
 
     fwrite( pal, sizeof( u16 ), numColors, p_out );
+
+    if( p_rsddata ) {
+        u8 meta[ 3 ] = { p_frames, p_width, p_height };
+        fwrite( meta, sizeof( u8 ), 3, p_out );
+    }
+
     for( size_t fr = 0; fr < p_frames; ++fr ) {
         if( p_height == PKMN_SPRITE && p_width == PKMN_SPRITE ) {
-            print_tiled( p_out, image_data + fr * 16 * 32 );
+            print_tiled( p_out, image_data + fr * p_width / 2 * p_height );
         } else {
-            print_tiled( p_out, image_data + fr * 16 * 32, p_width / 2, p_height );
+            print_tiled( p_out, image_data + fr * p_width / 2 * p_height, p_width / 2, p_height );
         }
+    }
+
+    for( size_t x = 0; x < numTiles; ++x ) {
+        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ image_data[ x ] ] ),
+                blue( pal[ image_data[ x ] ] ), green( pal[ image_data[ x ] ] ), image_data[ x ] );
+        if( ( x & 15 ) == 15 ) printf( "\n" );
+
+        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
     }
 }
 
