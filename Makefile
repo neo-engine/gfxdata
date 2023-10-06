@@ -44,6 +44,18 @@ endif
 	./pkmnSprite data/pkmn-icon/ icon 32 32 1
 	touch fsdata
 
+pkmn_fsdata: pkmnSprite
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)
+	./pkmnSprite data/pkmn/ frnt 96 96 1
+	./pkmnSprite data/pkmn-back/ back 96 96 1
+	./pkmnSprite data/pkmn-icon/ icon 32 32 1
+	touch fsdata
+
+
 pkmnSprite: $(OFILES) $(BUILD)/pkmnSprite.o
 	$(CC) $(LDFLAGS) -o $@ $^
 

@@ -288,6 +288,16 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
 
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
 
+
+    for( size_t x = 0; x < numTiles; ++x ) {
+        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ image_data[ x ] ] ),
+                blue( pal[ image_data[ x ] ] ), green( pal[ image_data[ x ] ] ), image_data[ x ] );
+        if( ( x % 96 ) == 95 ) printf( "\n" );
+
+//        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
+    }
+
+
     // As we are dealing with sprites here, two neighboring pixels share a single byte.
     for( size_t i = 0; i < numTiles / 2; ++i ) {
         image_data[ i ] = ( image_data[ 2 * i + 1 ] << 4 ) | image_data[ 2 * i ];
@@ -306,14 +316,6 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
         } else {
             print_tiled( p_out, image_data + fr * p_width / 2 * p_height, p_width / 2, p_height );
         }
-    }
-
-    for( size_t x = 0; x < numTiles; ++x ) {
-        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ image_data[ x ] ] ),
-                blue( pal[ image_data[ x ] ] ), green( pal[ image_data[ x ] ] ), image_data[ x ] );
-        if( ( x & 15 ) == 15 ) printf( "\n" );
-
-        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
     }
 }
 
