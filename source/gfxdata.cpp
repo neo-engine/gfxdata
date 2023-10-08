@@ -229,8 +229,8 @@ map<pkmnInfo, bitmap> readPKMNPictures( const string& p_path ) {
 }
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
-                 u8 p_frames, u8 p_threshold, bool p_rsddata ) {
-    u8     col   = !!p_img( 0, 0 ).m_transparent;
+                 u8 p_frames, u8 p_threshold, bool p_rsddata, u16 p_transparent ) {
+    u8     col   = !p_img( 0, 0 ).m_transparent;
     size_t SCALE = 1;
     if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
 
@@ -239,7 +239,15 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
     u16 pal[ 300 ]                             = { 0 };
 
     map<u16, u8> palidx;
-    palidx[ 0 ] = 0;
+    palidx[ p_transparent ] = 0;
+    pal[ 0 ]                = p_transparent;
+
+    if( p_transparent ) {
+        fprintf( stderr, "[%s] Using transparent color \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m\n",
+                 p_name.c_str( ), red( p_transparent ), blue( p_transparent ),
+                 green( p_transparent ), p_transparent );
+    }
+
     for( size_t frame = 0; frame < p_frames; ++frame )
         for( size_t y = 0; y < p_height; y++ )
             for( size_t x = 0; x < p_width; x++ ) {
@@ -249,7 +257,7 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
                                  | ( conv( p_img( nx * SCALE, y * SCALE ).m_green ) << 5 )
                                  | ( conv( p_img( nx * SCALE, y * SCALE ).m_blue ) << 10 )
                                  | ( 1 << 15 );
-                if( p_img( nx * SCALE, y * SCALE ).m_transparent ) { conv_color = 0; }
+                if( !p_img( nx * SCALE, y * SCALE ).m_transparent ) { conv_color = p_transparent; }
                 if( !palidx.count( conv_color ) ) {
                     // Check if the new color is very close to an existing color
                     u8 min_del = 255, del_p = 0;
@@ -288,15 +296,16 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
 
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
 
-
+    /*
     for( size_t x = 0; x < numTiles; ++x ) {
         printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ image_data[ x ] ] ),
                 blue( pal[ image_data[ x ] ] ), green( pal[ image_data[ x ] ] ), image_data[ x ] );
-        if( ( x % 96 ) == 95 ) printf( "\n" );
+        if( ( x % p_width ) == p_width - 1 ) printf( "\n" );
 
-//        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
+        //        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
     }
-
+    printf( "\n" );
+    */
 
     // As we are dealing with sprites here, two neighboring pixels share a single byte.
     for( size_t i = 0; i < numTiles / 2; ++i ) {
@@ -387,6 +396,56 @@ void printPKMNPictures( const char* p_name, bool p_female, bool p_shiny,
                   + " f" + to_string( p_female ) + " *" + to_string( p_shiny );
         f = fopen( fname.c_str( ), "wb" );
         printImage( f, nm, img, p_height, p_width, p_frames, p_threshold );
+        fclose( f );
+    }
+}
+
+void printPKMNPicturesSimple( const char* p_name, bool p_female, bool p_shiny,
+                              map<pkmnInfo, bitmap>& p_images, u8 p_frames, u8 p_threshold,
+                              bool p_rsd ) {
+    for( const auto& [ info, img ] : p_images ) {
+        if( info.m_shiny != p_shiny && info.m_female != p_female ) {
+            auto i2 = info;
+            i2.m_shiny ^= 1;
+            i2.m_female ^= 1;
+            if( p_images.count( i2 ) ) { continue; }
+        }
+        if( info.m_shiny != p_shiny ) {
+            auto i2 = info;
+            i2.m_shiny ^= 1;
+            if( p_images.count( i2 ) ) { continue; }
+        }
+        if( info.m_female != p_female ) {
+            auto i2 = info;
+            i2.m_female ^= 1;
+            if( p_images.count( i2 ) ) { continue; }
+        }
+
+        auto fname = string( FSROOT "/" ) + string( p_name ) + "/"
+                     + to_string( info.m_idx / MAX_ITEMS_PER_DIR );
+        fs::create_directories( fname );
+        fname += "/" + to_string( info.m_idx );
+        if( info.m_forme ) { fname += "_" + to_string( info.m_forme ); }
+
+        if( p_female ) { fname += "f"; }
+        if( p_shiny ) { fname += "s"; }
+        if( p_rsd ) {
+            fname += ".rsd";
+        } else {
+            fname += ".raw";
+        }
+        auto nm = string( p_name ) + " " + to_string( info.m_idx )
+                  + ( info.m_forme ? "_" + to_string( info.m_forme ) : "" ) + " f"
+                  + to_string( p_female ) + " *" + to_string( p_shiny );
+        FILE* f = fopen( fname.c_str( ), "wb" );
+
+        if( img.m_height >= 32 ) {
+            printImage( f, nm, img, img.m_height / 2, img.m_width / ( 2 * p_frames ), p_frames,
+                        p_threshold, p_rsd );
+        } else {
+            printImage( f, nm, img, img.m_height, img.m_width / p_frames, p_frames, p_threshold,
+                        p_rsd );
+        }
         fclose( f );
     }
 }

@@ -30,19 +30,76 @@ DATA_FILES	:=  $(addprefix $(DATA)/, $(foreach dir, $(DATA),$(notdir $(wildcard 
 CPPFILES	:=	gfxdata.cpp bitmap.cpp
 OFILES		:=	$(addprefix $(BUILD)/, $(CPPFILES:.cpp=.o) )
 
-fsdata: pkmnSprite icon iconArray berrytree
+fsdata:  berrytree_sprite pkmn_follow pkmn_fsdata item_icon
+	touch fsdata
+
+berrytree_sprite: berrytree
 ifdef LOCAL
 	@mkdir -p $(FSROOT)
 	@mkdir -p $(OUT)
 endif
 	@mkdir -p $(BUILD)
 	./berrytree data/berrytree/ BERRIES/
+	touch berrytree_sprite
+
+item_icon: icon iconArray
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)
 	./iconArray data/tmhm/ tmhm 32 32 1
 	./icon data/item/ item 32 32 1
-	./pkmnSprite data/pkmn/ frnt 96 96 1
-	./pkmnSprite data/pkmn-back/ back 96 96 1
-	./pkmnSprite data/pkmn-icon/ icon 32 32 1
-	touch fsdata
+	touch item_icon
+
+pkmn_follow_1: convertfollowpkmn pkmnowsprite2rsd
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)/img
+	@echo "Converting follow pkmn spritesheets"
+	@echo "Gen 1"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-1/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 2"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-2/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 3"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-3/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 4"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-4/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 5"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-5/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 6"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-6/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 7"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-7/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 7.1"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-7.1/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 7.2"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-7.2/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 8"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-8/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 8.1"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-8.1/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 8.2"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-8.2/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 8.3"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-8.3/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 9"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-9/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	@echo "Gen 9.1"
+	@$(foreach img,$(wildcard data/pkmn-follow/gen-9.1/*.png),./convertfollowpkmn $(img) $(BUILD)/img/$(notdir $(img));)
+	touch pkmn_follow_1
+
+pkmn_follow: pkmn_follow_1 pkmnowsprite2rsd
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)
+	@echo "Converting to rsd"
+	./pkmnowsprite2rsd $(BUILD)/img NPCP
+	touch pkmn_follow
 
 pkmn_fsdata: pkmnSprite
 ifdef LOCAL
@@ -53,7 +110,7 @@ endif
 	./pkmnSprite data/pkmn/ frnt 96 96 1
 	./pkmnSprite data/pkmn-back/ back 96 96 1
 	./pkmnSprite data/pkmn-icon/ icon 32 32 1
-	touch fsdata
+	touch pkmn_fsdata
 
 
 pkmnSprite: $(OFILES) $(BUILD)/pkmnSprite.o
@@ -68,11 +125,33 @@ icon: $(OFILES) $(BUILD)/icon.o
 iconArray: $(OFILES) $(BUILD)/iconArray.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
+convertfollowpkmn: $(OFILES) $(BUILD)/convertfollowpkmn.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
+pkmnowsprite2rsd: $(OFILES) $(BUILD)/pkmnowsprite2rsd.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
+clean-binary:
+	@rm -r $(BUILD)
+	@rm pkmnSprite
+	@rm icon
+	@rm iconArray
+	@rm convertfollowpkmn
+	@rm pkmnowsprite2rsd
+
 clean:
 	@rm -r $(BUILD)
 	@rm pkmnSprite
 	@rm icon
 	@rm iconArray
+	@rm convertfollowpkmn
+	@rm pkmnowsprite2rsd
+	@rm pkmn_follow
+	@rm pkmn_follow_1
+	@rm pkmn_fsdata
+	@rm item_icon
+	@rm berrytree_sprite
+	@rm fsdata
 
 $(BUILD)/%.o: $(SOURCES)/%.cpp
 	@mkdir -p $(BUILD)

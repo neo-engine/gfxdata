@@ -122,9 +122,9 @@ bitmap::bitmap( const char* p_path ) {
         for( size_t x = 0; x < m_width; x++ ) {
             png_bytep px = &( row[ x * 4 ] );
             if( px[ 3 ] )
-                m_pixels[ x ][ y ] = { px[ 0 ], px[ 1 ], px[ 2 ], 0 };
+                m_pixels[ x ][ y ] = { px[ 0 ], px[ 1 ], px[ 2 ], 255 };
             else
-                m_pixels[ x ][ y ] = { 0, 0, 0, 1 };
+                m_pixels[ x ][ y ] = { 0, 0, 0, 0 };
         }
     }
 }
@@ -136,7 +136,7 @@ bitmap::bitmap( const char* p_path ) {
 pixel& bitmap::operator( )( size_t p_x, size_t p_y ) {
     if( p_x < 0 || p_x >= m_width || p_y < 0 || p_y >= m_height ) {
         //        std::fprintf( stderr, "No pixel at ( %lu | %lu )!\n", p_x, p_y );
-        static pixel defPixel = { 0, 0, 0 };
+        static pixel defPixel = { 0, 0, 0, 1 };
         return defPixel;
     }
     return m_pixels[ p_x ][ p_y ];
@@ -144,7 +144,7 @@ pixel& bitmap::operator( )( size_t p_x, size_t p_y ) {
 pixel bitmap::operator( )( size_t p_x, size_t p_y ) const {
     if( p_x < 0 || p_x >= m_width || p_y < 0 || p_y >= m_height ) {
         //        std::fprintf( stderr, "No pixel at ( %lu | %lu )!\n", p_x, p_y );
-        static pixel defPixel = { 0, 0, 0 };
+        static pixel defPixel = { 0, 0, 0, 1 };
         return defPixel;
     }
     return m_pixels[ p_x ][ p_y ];
@@ -166,7 +166,7 @@ int bitmap::writeToFile( const char* p_path ) const {
 
     int status = -1;
 
-    int pixelSize = 3, depth = 8;
+    int pixelSize = 4, depth = 8;
 
     fd = std::fopen( p_path, "wb" );
     if( !fd ) {
@@ -197,8 +197,8 @@ int bitmap::writeToFile( const char* p_path ) const {
 
     // Set image attributes
 
-    png_set_IHDR( pngPtr, infoPtr, m_width, m_height, depth, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
+    png_set_IHDR( pngPtr, infoPtr, m_width, m_height, depth, PNG_COLOR_TYPE_RGB_ALPHA,
+                  PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
 
     // Initialize rows of png
 
@@ -211,6 +211,7 @@ int bitmap::writeToFile( const char* p_path ) const {
             *row++  = px.m_red;
             *row++  = px.m_green;
             *row++  = px.m_blue;
+            *row++  = px.m_transparent;
         }
     }
 
