@@ -41,7 +41,7 @@ int main( int p_argc, char** p_argv ) {
     for( size_t i = 0; i < images.size( ); ++i ) {
         if( pal_compress <= 1 || i % pal_compress == 0 ) {
             memset( pal, 0, sizeof( pal ) );
-            colsUsed = 0;
+            colsUsed = 1;
         }
         printImage( pal, colsUsed, f, string( p_argv[ 2 ] ) + " " + to_string( i ), images[ i ], hg,
                     wd, fr, THRESHOLD );
