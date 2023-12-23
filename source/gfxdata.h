@@ -18,12 +18,12 @@ typedef short int          s16;
 typedef unsigned char      u8;
 typedef signed char        s8;
 
-#define conv( a ) ( (u8) ( (a) *31 / 255 ) )
-#define revconv( a ) ( ( (a) *255 / 31 ) )
+#define conv( a ) ( (u8) ( ( a ) * 31 / 255 ) )
+#define revconv( a ) ( ( ( a ) * 255 / 31 ) )
 
 #define green( a ) ( revconv( ( ( a ) >> 10 ) & 31 ) )
 #define blue( a ) ( revconv( ( ( a ) >> 5 ) & 31 ) )
-#define red( a ) ( revconv( (a) &31 ) )
+#define red( a ) ( revconv( ( a ) & 31 ) )
 
 typedef tuple<u8, u8, u8> t3;
 
@@ -54,6 +54,10 @@ vector<vector<bitmap>> readTranslatablePictures( const string& p_path );
 vector<bitmap>         readNumberedPictures( const string& p_path );
 map<u32, bitmap>       readIndexedPictures( const string& p_path );
 map<pkmnInfo, bitmap>  readPKMNPictures( const string& p_path );
+
+void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p_name,
+                 const bitmap& p_img, u16 p_height, u16 p_width, u8 p_frames, u8 p_threshold,
+                 bool p_rsddata = false );
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
                  u8 p_frames, u8 p_threshold, bool p_rsd = false, u16 p_transparent = 0 );

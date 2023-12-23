@@ -24,6 +24,9 @@ int main( int p_argc, char** p_argv ) {
     sscanf( p_argv[ 4 ], "%hu", &wd );
     sscanf( p_argv[ 5 ], "%hhu", &fr );
 
+    u8 pal_compress = 1; // # of sprites that share a palette
+    if( p_argc >= 7 ) { sscanf( p_argv[ 6 ], "%hhu", &pal_compress ); }
+
     auto images = readNumberedPictures( p_argv[ 1 ] );
 
     fs::create_directories( std::string( FSROOT ) );
@@ -32,9 +35,16 @@ int main( int p_argc, char** p_argv ) {
     FILE* f = fopen( fname.c_str( ), "wb" );
     assert( f );
 
+    u16 pal[ 16 ] = { 0 };
+    u8  colsUsed  = 0;
+
     for( size_t i = 0; i < images.size( ); ++i ) {
-        printImage( f, string( p_argv[ 2 ] ) + " " + to_string( i ), images[ i ], hg, wd, fr,
-                    THRESHOLD );
+        if( pal_compress <= 1 || i % pal_compress == 0 ) {
+            memset( pal, 0, sizeof( pal ) );
+            colsUsed = 0;
+        }
+        printImage( pal, colsUsed, f, string( p_argv[ 2 ] ) + " " + to_string( i ), images[ i ], hg,
+                    wd, fr, THRESHOLD );
     }
 
     printf( fname.c_str( ) );

@@ -23,14 +23,14 @@ DATA     	:=	data
 CFLAGS      :=	-Wall -DNUM_LANGUAGES=$(NUM_LANGUAGES) \
 				-DMAX_ITEMS_PER_DIR=$(MAX_ITEMS_PER_DIR) -DMAX_PKMN=$(MAX_PKMN) \
 				-DFSROOT=\"$(FSROOT)\" -DOUT=\"$(OUT)\" -g3 -ggdb
-CXXFLAGS    :=	$(CFLAGS) -std=c++2a -fsanitize=undefined
-LDFLAGS     := -lubsan -lpng
+CXXFLAGS    :=	$(CFLAGS) -std=c++20 -I/opt/homebrew/include/
+LDFLAGS     := -L /opt/homebrew/lib/ -lpng
 
 DATA_FILES	:=  $(addprefix $(DATA)/, $(foreach dir, $(DATA),$(notdir $(wildcard $(dir)/*.csv))))
 CPPFILES	:=	gfxdata.cpp bitmap.cpp
 OFILES		:=	$(addprefix $(BUILD)/, $(CPPFILES:.cpp=.o) )
 
-fsdata:  berrytree_sprite pkmn_follow pkmn_fsdata item_icon
+fsdata:  berrytree_sprite pkmn_follow pkmn_fsdata item_icon block_icon
 	touch fsdata
 
 berrytree_sprite: berrytree
@@ -51,6 +51,15 @@ endif
 	./iconArray data/tmhm/ tmhm 32 32 1
 	./icon data/item/ item 32 32 1
 	touch item_icon
+
+block_icon: icon
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)
+	./icon data/pokeblock/ pokeblock 32 32 1 6
+	touch block_icon
 
 pkmn_follow_1: convertfollowpkmn pkmnowsprite2rsd
 ifdef LOCAL

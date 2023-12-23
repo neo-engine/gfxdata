@@ -228,6 +228,90 @@ map<pkmnInfo, bitmap> readPKMNPictures( const string& p_path ) {
     return res;
 }
 
+void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p_name,
+                 const bitmap& p_img, u16 p_height, u16 p_width, u8 p_frames, u8 p_threshold,
+                 bool p_rsddata ) {
+    u8     col   = p_colorsUsed + !p_img( 0, 0 ).m_transparent;
+    size_t SCALE = 1;
+    if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
+
+    u8 start                                  = 0;
+    u8 image_data[ 256 * 256 * 20 / 4 + 100 ] = { 0 };
+
+    map<u16, u8> palidx;
+
+    for( u8 i = 0; i < p_colorsUsed; ++i ) { palidx[ p_pal[ i ] ] = i; }
+
+    for( size_t frame = 0; frame < p_frames; ++frame )
+        for( size_t y = 0; y < p_height; y++ )
+            for( size_t x = 0; x < p_width; x++ ) {
+                size_t nx = x + p_width * frame;
+
+                u16 conv_color = ( conv( p_img( nx * SCALE, y * SCALE ).m_red ) )
+                                 | ( conv( p_img( nx * SCALE, y * SCALE ).m_green ) << 5 )
+                                 | ( conv( p_img( nx * SCALE, y * SCALE ).m_blue ) << 10 )
+                                 | ( 1 << 15 );
+                if( !p_img( nx * SCALE, y * SCALE ).m_transparent ) { conv_color = p_pal[ 0 ]; }
+                if( !palidx.count( conv_color ) ) {
+                    // Check if the new color is very close to an existing color
+                    u8 min_del = 255, del_p = 0;
+                    for( u8 p = 1 + start; p < 16; ++p ) {
+                        if( col_dis( conv_color, p_pal[ p ] ) < min_del ) {
+                            min_del = col_dis( conv_color, p_pal[ p ] );
+                            del_p   = p;
+                        }
+                    }
+
+                    if( min_del < p_threshold && col + start ) {
+                        fprintf( stderr,
+                                 "[%s] replacing \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m"
+                                 " with \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m (%hu)\n",
+                                 p_name.c_str( ), red( conv_color ), blue( conv_color ),
+                                 green( conv_color ), conv_color, red( p_pal[ del_p ] ),
+                                 blue( p_pal[ del_p ] ), green( p_pal[ del_p ] ), p_pal[ del_p ],
+                                 del_p );
+                        palidx[ conv_color ] = del_p;
+                    } else if( col + start > 16 ) {
+                        fprintf( stderr, "[%s] To COLORFUL:", p_name.c_str( ) );
+                        fprintf( stderr,
+                                 " replacing \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m"
+                                 " with \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m\n",
+                                 red( conv_color ), blue( conv_color ), green( conv_color ),
+                                 conv_color, red( p_pal[ del_p ] ), blue( p_pal[ del_p ] ),
+                                 green( p_pal[ del_p ] ), p_pal[ del_p ] );
+                        palidx[ conv_color ] = del_p;
+                    } else {
+                        p_pal[ col + start ] = conv_color;
+                        palidx[ conv_color ] = col++;
+                    }
+                }
+                image_data[ p_width * p_height * frame + y * p_width + x ]
+                    = start + palidx[ conv_color ];
+            }
+
+    size_t numTiles = p_height * p_width * p_frames, numColors = 16;
+
+    // As we are dealing with sprites here, two neighboring pixels share a single byte.
+    for( size_t i = 0; i < numTiles / 2; ++i ) {
+        image_data[ i ] = ( image_data[ 2 * i + 1 ] << 4 ) | image_data[ 2 * i ];
+    }
+
+    fwrite( p_pal, sizeof( u16 ), numColors, p_out );
+
+    if( p_rsddata ) {
+        u8 meta[ 3 ] = { p_frames, static_cast<u8>( p_width ), static_cast<u8>( p_height ) };
+        fwrite( meta, sizeof( u8 ), 3, p_out );
+    }
+
+    for( size_t fr = 0; fr < p_frames; ++fr ) {
+        if( p_height == PKMN_SPRITE && p_width == PKMN_SPRITE ) {
+            print_tiled( p_out, image_data + fr * p_width / 2 * p_height );
+        } else {
+            print_tiled( p_out, image_data + fr * p_width / 2 * p_height, p_width / 2, p_height );
+        }
+    }
+}
+
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
                  u8 p_frames, u8 p_threshold, bool p_rsddata, u16 p_transparent ) {
     u8     col   = !p_img( 0, 0 ).m_transparent;
@@ -315,7 +399,7 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
     fwrite( pal, sizeof( u16 ), numColors, p_out );
 
     if( p_rsddata ) {
-        u8 meta[ 3 ] = { p_frames, p_width, p_height };
+        u8 meta[ 3 ] = { p_frames, static_cast<u8>( p_width ), static_cast<u8>( p_height ) };
         fwrite( meta, sizeof( u8 ), 3, p_out );
     }
 
