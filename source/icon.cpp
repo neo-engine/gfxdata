@@ -45,6 +45,7 @@ int main( int p_argc, char** p_argv ) {
         }
         printImage( pal, colsUsed, f, string( p_argv[ 2 ] ) + " " + to_string( i ), images[ i ], hg,
                     wd, fr, THRESHOLD );
+        printf( "%u Used %hhu colors, rest\n", i, colsUsed );
     }
 
     printf( fname.c_str( ) );

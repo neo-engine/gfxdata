@@ -231,7 +231,6 @@ map<pkmnInfo, bitmap> readPKMNPictures( const string& p_path ) {
 void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p_name,
                  const bitmap& p_img, u16 p_height, u16 p_width, u8 p_frames, u8 p_threshold,
                  bool p_rsddata ) {
-    u8     col   = p_colorsUsed + !p_img( 0, 0 ).m_transparent;
     size_t SCALE = 1;
     if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
 
@@ -239,8 +238,8 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
     u8 image_data[ 256 * 256 * 20 / 4 + 100 ] = { 0 };
 
     map<u16, u8> palidx;
-
     for( u8 i = 0; i < p_colorsUsed; ++i ) { palidx[ p_pal[ i ] ] = i; }
+    p_colorsUsed = std::max( p_colorsUsed, u8{ !p_img( 0, 0 ).m_transparent } );
 
     for( size_t frame = 0; frame < p_frames; ++frame )
         for( size_t y = 0; y < p_height; y++ )
@@ -262,7 +261,7 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
                         }
                     }
 
-                    if( min_del < p_threshold && col + start ) {
+                    if( min_del < p_threshold && p_colorsUsed + start ) {
                         fprintf( stderr,
                                  "[%s] replacing \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m"
                                  " with \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m (%hu)\n",
@@ -271,7 +270,7 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
                                  blue( p_pal[ del_p ] ), green( p_pal[ del_p ] ), p_pal[ del_p ],
                                  del_p );
                         palidx[ conv_color ] = del_p;
-                    } else if( col + start > 16 ) {
+                    } else if( p_colorsUsed + start > 16 ) {
                         fprintf( stderr, "[%s] To COLORFUL:", p_name.c_str( ) );
                         fprintf( stderr,
                                  " replacing \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m"
@@ -281,8 +280,8 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
                                  green( p_pal[ del_p ] ), p_pal[ del_p ] );
                         palidx[ conv_color ] = del_p;
                     } else {
-                        p_pal[ col + start ] = conv_color;
-                        palidx[ conv_color ] = col++;
+                        p_pal[ p_colorsUsed + start ] = conv_color;
+                        palidx[ conv_color ]          = p_colorsUsed++;
                     }
                 }
                 image_data[ p_width * p_height * frame + y * p_width + x ]
