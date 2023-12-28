@@ -30,7 +30,7 @@ DATA_FILES	:=  $(addprefix $(DATA)/, $(foreach dir, $(DATA),$(notdir $(wildcard 
 CPPFILES	:=	gfxdata.cpp bitmap.cpp
 OFILES		:=	$(addprefix $(BUILD)/, $(CPPFILES:.cpp=.o) )
 
-fsdata:  berrytree_sprite pkmn_follow pkmn_fsdata item_icon block_icon
+fsdata:  berrytree_sprite pkmn_follow pkmn_fsdata item_icon block_icon npc_sprite
 	touch fsdata
 
 npc_sprite: npcsprite
@@ -175,6 +175,7 @@ clean:
 	@rm item_icon
 	@rm berrytree_sprite
 	@rm fsdata
+	@rm npc_sprite
 
 $(BUILD)/%.o: $(SOURCES)/%.cpp
 	@mkdir -p $(BUILD)
