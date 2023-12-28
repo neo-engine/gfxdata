@@ -33,6 +33,17 @@ OFILES		:=	$(addprefix $(BUILD)/, $(CPPFILES:.cpp=.o) )
 fsdata:  berrytree_sprite pkmn_follow pkmn_fsdata item_icon block_icon
 	touch fsdata
 
+npc_sprite: npcsprite
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)
+	./npcsprite data/npc/ npc
+	touch npc_sprite
+
+
+
 berrytree_sprite: berrytree
 ifdef LOCAL
 	@mkdir -p $(FSROOT)
@@ -123,6 +134,9 @@ endif
 
 
 pkmnSprite: $(OFILES) $(BUILD)/pkmnSprite.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
+npcsprite: $(OFILES) $(BUILD)/npcsprite.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 berrytree: $(OFILES) $(BUILD)/berrytree.o

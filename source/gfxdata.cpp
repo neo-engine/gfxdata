@@ -106,6 +106,33 @@ vector<bitmap> readNumberedPictures( const string& p_path ) {
     return res;
 }
 
+vector<std::pair<bitmap, std::pair<u16, u16>>>
+readNumberedPicturesWithSize( const string& p_path, u16 p_defaultWidth, u16 p_defaultHeight ) {
+    auto res = vector<std::pair<bitmap, std::pair<u16, u16>>>( );
+
+    auto tmp = readPictures( p_path );
+    for( const auto& [ id, img ] : tmp ) {
+        u32 num = 0;
+        u32 wid = 0;
+        u32 hei = 0;
+
+        if( sscanf( id.c_str( ), "%u_%u_%u", &num, &wid, &hei ) ) {
+        } else if( sscanf( id.c_str( ), "%u", &num ) ) {
+            wid = p_defaultWidth;
+            hei = p_defaultHeight;
+        } else {
+            continue;
+        }
+
+        if( num >= res.size( ) ) {
+            res.resize( num + 10, { bitmap{ p_defaultWidth, p_defaultHeight },
+                                    { p_defaultWidth, p_defaultHeight } } );
+        }
+        res[ num ] = { img, { wid, hei } };
+    }
+    return res;
+}
+
 map<u32, bitmap> readIndexedPictures( const string& p_path ) {
     auto res = map<u32, bitmap>( );
 

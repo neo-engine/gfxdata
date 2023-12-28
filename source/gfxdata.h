@@ -55,6 +55,10 @@ vector<bitmap>         readNumberedPictures( const string& p_path );
 map<u32, bitmap>       readIndexedPictures( const string& p_path );
 map<pkmnInfo, bitmap>  readPKMNPictures( const string& p_path );
 
+vector<std::pair<bitmap, std::pair<u16, u16>>>
+readNumberedPicturesWithSize( const string& p_path, u16 p_defaultWidth = 16,
+                              u16 p_defaultHeight = 32 );
+
 void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p_name,
                  const bitmap& p_img, u16 p_height, u16 p_width, u8 p_frames, u8 p_threshold,
                  bool p_rsddata = false );
