@@ -115,8 +115,10 @@ readNumberedPicturesWithSize( const string& p_path, u16 p_defaultWidth, u16 p_de
         u32 num = 0;
         u32 wid = 0;
         u32 hei = 0;
+        u32 pal = 0;
 
-        if( sscanf( id.c_str( ), "%u_%u_%u", &num, &wid, &hei ) ) {
+        if( sscanf( id.c_str( ), "%u_%u_%u_%u", &num, &wid, &hei, &pal ) ) {
+        } else if( sscanf( id.c_str( ), "%u_%u_%u", &num, &wid, &hei ) ) {
         } else if( sscanf( id.c_str( ), "%u", &num ) ) {
             wid = p_defaultWidth;
             hei = p_defaultHeight;
@@ -128,7 +130,7 @@ readNumberedPicturesWithSize( const string& p_path, u16 p_defaultWidth, u16 p_de
             res.resize( num + 10, { bitmap{ p_defaultWidth, p_defaultHeight },
                                     { p_defaultWidth, p_defaultHeight } } );
         }
-        res[ num ] = { img, { wid, hei } };
+        res[ num ] = { img, { wid, hei + ( pal << 8 ) } };
     }
     return res;
 }
