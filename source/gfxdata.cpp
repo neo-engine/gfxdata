@@ -267,6 +267,10 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
     u8 image_data[ 256 * 256 * 20 / 4 + 100 ] = { 0 };
 
     map<u16, u8> palidx;
+
+    palidx[ 0xceed ] = 0;
+    palidx[ 0x530e ] = 0;
+
     for( u8 i = 0; i < p_colorsUsed; ++i ) { palidx[ p_pal[ i ] ] = i; }
     p_colorsUsed = std::max( p_colorsUsed, u8{ !p_img( 0, 0 ).m_transparent } );
 
@@ -299,7 +303,7 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
                                  blue( p_pal[ del_p ] ), green( p_pal[ del_p ] ), p_pal[ del_p ],
                                  del_p );
                         palidx[ conv_color ] = del_p;
-                    } else if( p_colorsUsed + start > 16 ) {
+                    } else if( p_colorsUsed + start >= 16 ) {
                         fprintf( stderr, "[%s] To COLORFUL:", p_name.c_str( ) );
                         fprintf( stderr,
                                  " replacing \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m"
@@ -318,6 +322,21 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
             }
 
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
+
+    for( size_t x = 0; x < 16; ++x ) {
+        printf( "\x1b[48;2;%u;%u;%um%04hx\x1b[0;00m ", red( p_pal[ x ] ), blue( p_pal[ x ] ),
+                green( p_pal[ x ] ), p_pal[ x ] );
+    }
+    printf( "\n" );
+    printf( "\n" );
+
+    for( size_t x = 0; x < numTiles; ++x ) {
+        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( p_pal[ image_data[ x ] ] ),
+                blue( p_pal[ image_data[ x ] ] ), green( p_pal[ image_data[ x ] ] ),
+                image_data[ x ] );
+        if( ( x % p_width ) == p_width - 1 ) printf( "\n" );
+    }
+    printf( "\n" );
 
     // As we are dealing with sprites here, two neighboring pixels share a single byte.
     for( size_t i = 0; i < numTiles / 2; ++i ) {
