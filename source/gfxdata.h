@@ -64,7 +64,8 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
                  bool p_rsddata = false );
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
-                 u8 p_frames, u8 p_threshold, bool p_rsd = false, u16 p_transparent = 0 );
+                 u8 p_frames, u8 p_threshold, bool p_rsd = false, u16 p_transparent = 0,
+                 bool p_palLast = false );
 
 void printPKMNPictures( const char* p_name, bool p_female, bool p_shiny,
                         map<pkmnInfo, bitmap>& p_images, u16 p_height, u16 p_width, u8 p_frames,

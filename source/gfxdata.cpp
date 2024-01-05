@@ -331,9 +331,13 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
     printf( "\n" );
 
     for( size_t x = 0; x < numTiles; ++x ) {
-        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( p_pal[ image_data[ x ] ] ),
-                blue( p_pal[ image_data[ x ] ] ), green( p_pal[ image_data[ x ] ] ),
-                image_data[ x ] );
+        if( image_data[ x ] ) {
+            printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( p_pal[ image_data[ x ] ] ),
+                    blue( p_pal[ image_data[ x ] ] ), green( p_pal[ image_data[ x ] ] ),
+                    image_data[ x ] );
+        } else {
+            printf( "   ", image_data[ x ] );
+        }
         if( ( x % p_width ) == p_width - 1 ) printf( "\n" );
     }
     printf( "\n" );
@@ -360,7 +364,7 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
 }
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
-                 u8 p_frames, u8 p_threshold, bool p_rsddata, u16 p_transparent ) {
+                 u8 p_frames, u8 p_threshold, bool p_rsddata, u16 p_transparent, bool p_palLast ) {
     u8     col   = !p_img( 0, 0 ).m_transparent;
     size_t SCALE = 1;
     if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
@@ -377,6 +381,7 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
         fprintf( stderr, "[%s] Using transparent color \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m\n",
                  p_name.c_str( ), red( p_transparent ), blue( p_transparent ),
                  green( p_transparent ), p_transparent );
+        start = 1;
     }
 
     for( size_t frame = 0; frame < p_frames; ++frame )
@@ -428,6 +433,12 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
 
     /*
+    for( auto i = 0; i < 16; ++i ) {
+        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ i ] ), blue( pal[ i ] ),
+                green( pal[ i ] ), pal[ i ] );
+    }
+    printf( "\n" );
+    printf( "\n" );
     for( size_t x = 0; x < numTiles; ++x ) {
         printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ image_data[ x ] ] ),
                 blue( pal[ image_data[ x ] ] ), green( pal[ image_data[ x ] ] ), image_data[ x ] );
@@ -443,7 +454,7 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
         image_data[ i ] = ( image_data[ 2 * i + 1 ] << 4 ) | image_data[ 2 * i ];
     }
 
-    fwrite( pal, sizeof( u16 ), numColors, p_out );
+    if( !p_palLast ) { fwrite( pal, sizeof( u16 ), numColors, p_out ); }
 
     if( p_rsddata ) {
         u8 meta[ 3 ] = { p_frames, static_cast<u8>( p_width ), static_cast<u8>( p_height ) };
@@ -456,6 +467,11 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
         } else {
             print_tiled( p_out, image_data + fr * p_width / 2 * p_height, p_width / 2, p_height );
         }
+    }
+
+    if( p_palLast ) {
+        pal[ 0 ] = 0;
+        fwrite( pal, sizeof( u16 ), numColors, p_out );
     }
 }
 

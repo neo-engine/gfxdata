@@ -42,6 +42,14 @@ endif
 	./npcsprite data/npc/ npc
 	touch npc_sprite
 
+trainer_sprite: trainer
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)
+	./trainer data/trainer/ TRAINER/
+	touch trainer_sprite
 
 
 berrytree_sprite: berrytree
@@ -137,6 +145,9 @@ pkmnSprite: $(OFILES) $(BUILD)/pkmnSprite.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 npcsprite: $(OFILES) $(BUILD)/npcsprite.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
+trainer: $(OFILES) $(BUILD)/trainer.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 berrytree: $(OFILES) $(BUILD)/berrytree.o
