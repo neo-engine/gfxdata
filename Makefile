@@ -52,13 +52,15 @@ endif
 	touch trainer_sprite
 
 
-berrytree_sprite: berrytree
+#berrytree_sprite: berrytree
+berrytree_sprite: npcsprite
 ifdef LOCAL
 	@mkdir -p $(FSROOT)
 	@mkdir -p $(OUT)
 endif
 	@mkdir -p $(BUILD)
-	./berrytree data/berrytree/ BERRIES/
+	#./berrytree data/berrytree/ BERRIES/
+	./npcsprite data/berrytree/ berry 6
 	touch berrytree_sprite
 
 item_icon: icon iconArray

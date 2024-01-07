@@ -365,7 +365,7 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
 
 void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_height, u16 p_width,
                  u8 p_frames, u8 p_threshold, bool p_rsddata, u16 p_transparent, bool p_palLast ) {
-    u8     col   = !p_img( 0, 0 ).m_transparent;
+    u8     col   = 0;
     size_t SCALE = 1;
     if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
 
@@ -377,7 +377,10 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
     if( p_transparent ) {
         palidx[ p_transparent ] = 0;
         pal[ 0 ]                = p_transparent;
-        start                   = 1;
+    } else if( !p_img( 0, 0 ).m_transparent ) {
+        palidx[ 0 ] = 0;
+        pal[ 0 ]    = 0;
+        start       = 1;
     }
 
     if( p_transparent ) {
@@ -387,12 +390,13 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
         start = 1;
     }
 
+    bool had_replace = false;
+
     for( size_t frame = 0; frame < p_frames; ++frame )
         for( size_t y = 0; y < p_height; y++ )
             for( size_t x = 0; x < p_width; x++ ) {
-                size_t nx = x + p_width * frame;
-
-                u16 conv_color = ( conv( p_img( nx * SCALE, y * SCALE ).m_red ) )
+                size_t nx         = x + p_width * frame;
+                u16    conv_color = ( conv( p_img( nx * SCALE, y * SCALE ).m_red ) )
                                  | ( conv( p_img( nx * SCALE, y * SCALE ).m_green ) << 5 )
                                  | ( conv( p_img( nx * SCALE, y * SCALE ).m_blue ) << 10 )
                                  | ( 1 << 15 );
@@ -415,6 +419,7 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
                                  green( conv_color ), conv_color, red( pal[ del_p ] ),
                                  blue( pal[ del_p ] ), green( pal[ del_p ] ), pal[ del_p ], del_p );
                         palidx[ conv_color ] = del_p;
+                        had_replace          = true;
                     } else if( col + start > 16 ) {
                         fprintf( stderr, "[%s] To COLORFUL:", p_name.c_str( ) );
                         fprintf( stderr,
@@ -424,13 +429,13 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
                                  conv_color, red( pal[ del_p ] ), blue( pal[ del_p ] ),
                                  green( pal[ del_p ] ), pal[ del_p ] );
                         palidx[ conv_color ] = del_p;
+                        had_replace          = true;
                     } else {
                         pal[ col + start ]   = conv_color;
-                        palidx[ conv_color ] = col++;
+                        palidx[ conv_color ] = start + col++;
                     }
                 }
-                image_data[ p_width * p_height * frame + y * p_width + x ]
-                    = start + palidx[ conv_color ];
+                image_data[ p_width * p_height * frame + y * p_width + x ] = palidx[ conv_color ];
             }
 
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
@@ -440,15 +445,23 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
                 green( pal[ i ] ), pal[ i ] );
     }
     printf( "\n" );
-    printf( "\n" );
-    for( size_t x = 0; x < numTiles; ++x ) {
-        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ image_data[ x ] ] ),
-                blue( pal[ image_data[ x ] ] ), green( pal[ image_data[ x ] ] ), image_data[ x ] );
-        if( ( x % p_width ) == p_width - 1 ) printf( "\n" );
+    if( had_replace ) {
+        printf( "\n" );
+        for( size_t x = 0; x < numTiles; ++x ) {
+            if( image_data[ x ] ) {
+                printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ image_data[ x ] ] ),
+                        blue( pal[ image_data[ x ] ] ), green( pal[ image_data[ x ] ] ),
+                        image_data[ x ] );
+            } else {
+                printf( "   " );
+            }
 
-        //        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
+            if( ( x % p_width ) == p_width - 1 ) printf( "\n" );
+
+            //        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
+        }
+        printf( "\n" );
     }
-    printf( "\n" );
 
     // As we are dealing with sprites here, two neighboring pixels share a single byte.
     for( size_t i = 0; i < numTiles / 2; ++i ) {

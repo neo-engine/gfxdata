@@ -80,6 +80,12 @@ int main( int p_argc, char** p_argv ) {
 
     rsdBankHeader header{ };
 
+    auto maxf = MAX_FRAMES_16_32;
+    if( p_argc > 3 ) {
+        sscanf( p_argv[ 3 ], "%i", &maxf );
+        header.m_maxEntrySize = maxf * SIZE_16_32 + 16 * sizeof( u16 ) + 3;
+    }
+
     fwrite( &header, 1, sizeof( rsdBankHeader ), f );
 
     for( auto i = 0; i < images.size( ); ++i ) {
@@ -95,28 +101,32 @@ int main( int p_argc, char** p_argv ) {
             chg &= 255;
         }
 
+        auto scale = 1;
+
+        if( img.m_height == 2 * chg ) { scale = 2; }
+
         printf( "%d: %d %d extracted sizes: %d %d ~> %d frames, force pal %d\n", i, img.m_width,
-                img.m_height, cwd, chg, img.m_width / cwd, force_pal );
+                img.m_height, cwd, chg, img.m_width / ( scale * cwd ), force_pal );
         fflush( stdout );
 
         if( force_pal == 3 ) {
             u8 colsUsed = 16;
-            printImage( FORCE_PAL_3, colsUsed, f, fname, img, chg, cwd, img.m_width / cwd,
-                        THRESHOLD, true );
+            printImage( FORCE_PAL_3, colsUsed, f, fname, img, chg, cwd,
+                        img.m_width / ( scale * cwd ), THRESHOLD, true );
 
         } else if( force_pal == 8 ) {
             u8 colsUsed = 16;
-            printImage( FORCE_PAL_8, colsUsed, f, fname, img, chg, cwd, img.m_width / cwd,
-                        THRESHOLD, true );
+            printImage( FORCE_PAL_8, colsUsed, f, fname, img, chg, cwd,
+                        img.m_width / ( scale * cwd ), THRESHOLD, true );
         } else {
-            printImage( f, fname, img, chg, cwd, img.m_width / cwd, THRESHOLD, true,
+            printImage( f, fname, img, chg, cwd, img.m_width / ( scale * cwd ), THRESHOLD, true,
                         TRANSPARENT_COLOR, false );
         }
         // write padding
-        auto currentSize
-            = 3 /*meta*/ + 16 * sizeof( u16 ) /*palette*/ + img.m_width * img.m_height / 2;
+        auto currentSize = 3 /*meta*/ + 16 * sizeof( u16 ) /*palette*/
+                           + img.m_width * img.m_height / ( 2 * scale * scale );
 
-        printf( "%d: writing %u padding.\n", i, header.m_maxEntrySize - currentSize );
+        printf( "%d: writing %d padding.\n", i, header.m_maxEntrySize - currentSize );
         for( auto p = currentSize; p < header.m_maxEntrySize; ++p ) { std::putc( 0, f ); }
     }
     fclose( f );
