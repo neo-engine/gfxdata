@@ -15,7 +15,7 @@ constexpr u8 FRAMES_X    = 4;
 constexpr u8 FRAME_SKIP  = 1;
 constexpr u8 FRAME_START = 4;
 
-constexpr u16 TRANSPARENT_COLOR = 0x530e;
+constexpr u16 TRANSPARENT_COLOR = 0;
 
 constexpr u32 MAX_FRAMES_16_32 = 20;
 constexpr u32 SIZE_16_32       = 16 * 32 / 2;
@@ -110,7 +110,7 @@ int main( int p_argc, char** p_argv ) {
                         THRESHOLD, true );
         } else {
             printImage( f, fname, img, chg, cwd, img.m_width / cwd, THRESHOLD, true,
-                        TRANSPARENT_COLOR );
+                        TRANSPARENT_COLOR, false );
         }
         // write padding
         auto currentSize

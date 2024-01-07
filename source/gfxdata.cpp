@@ -374,8 +374,11 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
     u16 pal[ 300 ]                             = { 0 };
 
     map<u16, u8> palidx;
-    palidx[ p_transparent ] = 0;
-    pal[ 0 ]                = p_transparent;
+    if( p_transparent ) {
+        palidx[ p_transparent ] = 0;
+        pal[ 0 ]                = p_transparent;
+        start                   = 1;
+    }
 
     if( p_transparent ) {
         fprintf( stderr, "[%s] Using transparent color \x1b[48;2;%u;%u;%um%3hx\x1b[0;00m\n",
@@ -432,7 +435,6 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
 
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
 
-    /*
     for( auto i = 0; i < 16; ++i ) {
         printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ i ] ), blue( pal[ i ] ),
                 green( pal[ i ] ), pal[ i ] );
@@ -447,7 +449,6 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
         //        if( x % ( numTiles / 6 ) == ( numTiles / 6 ) - 1 ) printf( "\n" );
     }
     printf( "\n" );
-    */
 
     // As we are dealing with sprites here, two neighboring pixels share a single byte.
     for( size_t i = 0; i < numTiles / 2; ++i ) {
