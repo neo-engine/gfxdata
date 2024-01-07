@@ -336,7 +336,7 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
                     blue( p_pal[ image_data[ x ] ] ), green( p_pal[ image_data[ x ] ] ),
                     image_data[ x ] );
         } else {
-            printf( "   ", image_data[ x ] );
+            printf( "   " );
         }
         if( ( x % p_width ) == p_width - 1 ) printf( "\n" );
     }
@@ -557,6 +557,149 @@ void printPKMNPictures( const char* p_name, bool p_female, bool p_shiny,
                   + " f" + to_string( p_female ) + " *" + to_string( p_shiny );
         f = fopen( fname.c_str( ), "wb" );
         printImage( f, nm, img, p_height, p_width, p_frames, p_threshold );
+        fclose( f );
+    }
+}
+
+constexpr u32 MAX_FRAMES_64_64 = 8;
+constexpr u32 SIZE_64_64       = 64 * 64 / 2;
+struct rsdBankHeader {
+    u32 m_maxEntrySize = MAX_FRAMES_64_64 * SIZE_64_64 + 16 * sizeof( u16 ) + 3;
+};
+
+void printPKMNPicturesSemiSimple( const char* p_name, bool p_female, bool p_shiny,
+                                  map<pkmnInfo, bitmap>& p_images, u8 p_threshold ) {
+
+    auto FRAMES = 8;
+    auto RSD    = true;
+
+    auto fname = string( FSROOT "/" ) + string( p_name );
+    fs::create_directories( std::string( FSROOT ) );
+    if( p_female ) { fname += "f"; }
+    if( p_shiny ) { fname += "s"; }
+    fname += ".rsdb";
+
+    FILE*         f = fopen( fname.c_str( ), "wb" );
+    rsdBankHeader header{ };
+    fwrite( &header, 1, sizeof( rsdBankHeader ), f );
+    for( u16 i = 0; i <= MAX_PKMN; ++i ) {
+        pkmnInfo pin = { i, 0, p_shiny, p_female };
+        string   nm  = string( p_name ) + " " + to_string( i ) + " f" + to_string( p_female ) + " *"
+                    + to_string( p_shiny );
+
+        auto HEIGHT = 32, WIDTH = 32;
+
+        if( p_images.count( pin ) ) {
+            HEIGHT = p_images[ pin ].m_height / 2;
+            WIDTH  = p_images[ pin ].m_width / ( 2 * FRAMES );
+            printImage( f, nm, p_images[ pin ], HEIGHT, WIDTH, FRAMES, p_threshold, RSD );
+            // write padding
+            auto currentSize = 3 /*meta*/ + 16 * sizeof( u16 ) /*palette*/
+                               + FRAMES * WIDTH * HEIGHT / 2;
+
+            printf( "[%s] sz %d %d, writing %d padding.\n", nm.c_str( ), WIDTH, HEIGHT,
+                    int( header.m_maxEntrySize ) - int( currentSize ) );
+            for( auto p = currentSize; p < header.m_maxEntrySize; ++p ) { std::putc( 0, f ); }
+
+            continue;
+        }
+        if( p_female ) { pin.m_female = false; }
+        if( p_images.count( pin ) ) {
+            HEIGHT = p_images[ pin ].m_height / 2;
+            WIDTH  = p_images[ pin ].m_width / ( 2 * FRAMES );
+            printImage( f, nm, p_images[ pin ], HEIGHT, WIDTH, FRAMES, p_threshold, RSD );
+            // write padding
+            auto currentSize = 3 /*meta*/ + 16 * sizeof( u16 ) /*palette*/
+                               + FRAMES * WIDTH * HEIGHT / 2;
+
+            printf( "[%s] sz %d %d, writing %d padding.\n", nm.c_str( ), WIDTH, HEIGHT,
+                    int( header.m_maxEntrySize ) - int( currentSize ) );
+            for( auto p = currentSize; p < header.m_maxEntrySize; ++p ) { std::putc( 0, f ); }
+
+            continue;
+        }
+        if( p_shiny ) { pin.m_shiny = false; }
+        if( p_images.count( pin ) ) {
+            HEIGHT = p_images[ pin ].m_height / 2;
+            WIDTH  = p_images[ pin ].m_width / ( 2 * FRAMES );
+            printImage( f, nm, p_images[ pin ], HEIGHT, WIDTH, FRAMES, p_threshold, RSD );
+
+            // write padding
+            auto currentSize = 3 /*meta*/ + 16 * sizeof( u16 ) /*palette*/
+                               + FRAMES * WIDTH * HEIGHT / 2;
+
+            printf( "[%s] sz %d %d, writing %d padding.\n", nm.c_str( ), WIDTH, HEIGHT,
+                    int( header.m_maxEntrySize ) - int( currentSize ) );
+            for( auto p = currentSize; p < header.m_maxEntrySize; ++p ) { std::putc( 0, f ); }
+
+            continue;
+        }
+
+        pin.m_idx = 0;
+        if( p_images.count( pin ) ) {
+            printf( "[%s] does not exist\n", nm.c_str( ) );
+            HEIGHT = 32;
+            WIDTH  = 32;
+            printImage( f, nm, p_images[ pin ], HEIGHT, WIDTH, FRAMES, p_threshold, RSD );
+        } else {
+            HEIGHT = WIDTH = 0;
+        }
+        // write padding
+        auto currentSize = 3 /*meta*/ + 16 * sizeof( u16 ) /*palette*/
+                           + FRAMES * WIDTH * HEIGHT / 2;
+
+        printf( "[%s] sz %d %d, writing %d padding.\n", nm.c_str( ), WIDTH, HEIGHT,
+                int( header.m_maxEntrySize ) - int( currentSize ) );
+        for( auto p = currentSize; p < header.m_maxEntrySize; ++p ) { std::putc( 0, f ); }
+    }
+    fclose( f );
+
+    // write forms into separate files
+
+    for( const auto& [ info, img ] : p_images ) {
+        if( !info.m_forme ) { continue; }
+
+        if( info.m_shiny != p_shiny && info.m_female != p_female ) {
+            auto i2 = info;
+            i2.m_shiny ^= 1;
+            i2.m_female ^= 1;
+            if( p_images.count( i2 ) ) { continue; }
+        }
+        if( info.m_shiny != p_shiny ) {
+            auto i2 = info;
+            i2.m_shiny ^= 1;
+            if( p_images.count( i2 ) ) { continue; }
+        }
+        if( info.m_female != p_female ) {
+            auto i2 = info;
+            i2.m_female ^= 1;
+            if( p_images.count( i2 ) ) { continue; }
+        }
+
+        auto fname = string( FSROOT "/" ) + string( p_name ) + "/"
+                     + to_string( info.m_idx / MAX_ITEMS_PER_DIR );
+        fs::create_directories( fname );
+        fname += "/" + to_string( info.m_idx );
+        if( info.m_forme ) { fname += "_" + to_string( info.m_forme ); }
+
+        if( p_female ) { fname += "f"; }
+        if( p_shiny ) { fname += "s"; }
+        if( RSD ) {
+            fname += ".rsd";
+        } else {
+            fname += ".raw";
+        }
+        auto nm = string( p_name ) + " " + to_string( info.m_idx )
+                  + ( info.m_forme ? "_" + to_string( info.m_forme ) : "" ) + " f"
+                  + to_string( p_female ) + " *" + to_string( p_shiny );
+        FILE* f = fopen( fname.c_str( ), "wb" );
+
+        if( img.m_height >= 32 ) {
+            printImage( f, nm, img, img.m_height / 2, img.m_width / ( 2 * FRAMES ), FRAMES,
+                        p_threshold, RSD );
+        } else {
+            printImage( f, nm, img, img.m_height, img.m_width / FRAMES, FRAMES, p_threshold, RSD );
+        }
         fclose( f );
     }
 }

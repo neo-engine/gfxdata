@@ -71,6 +71,9 @@ void printPKMNPictures( const char* p_name, bool p_female, bool p_shiny,
                         map<pkmnInfo, bitmap>& p_images, u16 p_height, u16 p_width, u8 p_frames,
                         u8 p_threshold = 0 );
 
+void printPKMNPicturesSemiSimple( const char* p_name, bool p_female, bool p_shiny,
+                                  map<pkmnInfo, bitmap>& p_images, u8 p_threshold = 0 );
+
 void printPKMNPicturesSimple( const char* p_name, bool p_female, bool p_shiny,
                               map<pkmnInfo, bitmap>& p_images, u8 p_frames, u8 p_threshold = 0,
                               bool p_rsd = false );

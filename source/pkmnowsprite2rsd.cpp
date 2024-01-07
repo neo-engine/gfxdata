@@ -24,8 +24,8 @@ int main( int p_argc, char** p_argv ) {
 
     images = readPKMNPictures( p_argv[ 1 ] );
 
-    printPKMNPicturesSimple( p_argv[ 2 ], false, false, images, 8, 0, true );
-    printPKMNPicturesSimple( p_argv[ 2 ], false, true, images, 8, 0, true );
-    printPKMNPicturesSimple( p_argv[ 2 ], true, false, images, 8, 0, true );
-    printPKMNPicturesSimple( p_argv[ 2 ], true, true, images, 8, 0, true );
+    printPKMNPicturesSemiSimple( p_argv[ 2 ], false, false, images, 0 );
+    printPKMNPicturesSemiSimple( p_argv[ 2 ], false, true, images, 0 );
+    printPKMNPicturesSemiSimple( p_argv[ 2 ], true, false, images, 0 );
+    printPKMNPicturesSemiSimple( p_argv[ 2 ], true, true, images, 0 );
 }
