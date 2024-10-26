@@ -69,6 +69,7 @@ ifdef LOCAL
 	@mkdir -p $(OUT)
 endif
 	@mkdir -p $(BUILD)
+	./iconArray data/pokeballs/ pb 32 32 1 3
 	./iconArray data/tmhm/ tmhm 32 32 1
 	./icon data/item/ item 32 32 1
 	touch item_icon

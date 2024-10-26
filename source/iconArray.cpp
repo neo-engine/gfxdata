@@ -19,9 +19,11 @@ int main( int p_argc, char** p_argv ) {
 
     u16 hg, wd;
     u8  fr;
+    u16 def = 0;
     sscanf( p_argv[ 3 ], "%hu", &hg );
     sscanf( p_argv[ 4 ], "%hu", &wd );
     sscanf( p_argv[ 5 ], "%hhu", &fr );
+    if( p_argc >= 7 ) { sscanf( p_argv[ 6 ], "%hu", &def ); }
 
     auto images = readTranslatablePictures( p_argv[ 1 ] );
 
@@ -41,13 +43,20 @@ int main( int p_argc, char** p_argv ) {
                 printImage( f, string( p_argv[ 2 ] ) + " " + to_string( i ) + "-" + to_string( j ),
                             images[ i ][ j ], hg, wd, fr, THRESHOLD );
             } else {
-                printImage( f, string( p_argv[ 2 ] ) + " " + to_string( i ) + "-" + to_string( j ),
-                            images[ i ][ 0 ], hg, wd, fr, THRESHOLD );
+                if( !images[ i ].size( ) ) {
+                    printImage( f,
+                                string( p_argv[ 2 ] ) + " " + to_string( i ) + "-" + to_string( j ),
+                                images[ def ][ j ], hg, wd, fr, THRESHOLD );
+                } else {
+                    printImage( f,
+                                string( p_argv[ 2 ] ) + " " + to_string( i ) + "-" + to_string( j ),
+                                images[ i ][ 0 ], hg, wd, fr, THRESHOLD );
+                }
             }
         }
     }
 
-    printf( fname.c_str( ) );
+    printf( "%s", fname.c_str( ) );
     fclose( f );
 
     return 0;
