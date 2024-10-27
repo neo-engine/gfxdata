@@ -11,6 +11,8 @@
 
 constexpr u8 PKMN_SPRITE = 96;
 
+bool DEBUG = false;
+
 void print_tiled( FILE* p_f, u8* p_image_data, u8 p_width, u8 p_height ) {
     // Tile the given sprite into 8x8 blocks
     for( size_t y = 0; y < p_height; y += 8 ) {
@@ -440,12 +442,12 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
 
     size_t numTiles = p_height * p_width * p_frames, numColors = 16;
 
-    for( auto i = 0; i < 16; ++i ) {
-        printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ i ] ), blue( pal[ i ] ),
-                green( pal[ i ] ), pal[ i ] );
-    }
-    printf( "\n" );
-    if( had_replace ) {
+    if( had_replace || DEBUG ) {
+        printf( "[%s]: ", p_name.c_str( ) );
+        for( auto i = 0; i < 16; ++i ) {
+            printf( "\x1b[48;2;%u;%u;%um%3hx\x1b[0;00m", red( pal[ i ] ), blue( pal[ i ] ),
+                    green( pal[ i ] ), pal[ i ] );
+        }
         printf( "\n" );
         for( size_t x = 0; x < numTiles; ++x ) {
             if( image_data[ x ] ) {

@@ -27,7 +27,7 @@ CXXFLAGS    :=	$(CFLAGS) -std=c++20 -I/opt/homebrew/include/
 LDFLAGS     := -L /opt/homebrew/lib/ -lpng
 
 DATA_FILES	:=  $(addprefix $(DATA)/, $(foreach dir, $(DATA),$(notdir $(wildcard $(dir)/*.csv))))
-CPPFILES	:=	gfxdata.cpp bitmap.cpp
+CPPFILES	:=	gfxdata.cpp fsdata.cpp bitmap.cpp
 OFILES		:=	$(addprefix $(BUILD)/, $(CPPFILES:.cpp=.o) )
 
 fsdata:  berrytree_sprite pkmn_follow pkmn_fsdata item_icon block_icon npc_sprite
@@ -62,6 +62,15 @@ endif
 	#./berrytree data/berrytree/ BERRIES/
 	./npcsprite data/berrytree/ berry 6
 	touch berrytree_sprite
+
+sprite_archive: spriteArchive
+ifdef LOCAL
+	@mkdir -p $(FSROOT)
+	@mkdir -p $(OUT)
+endif
+	@mkdir -p $(BUILD)
+	./spriteArchive data/sprites/ sprites
+	touch sprite_archive
 
 item_icon: icon iconArray
 ifdef LOCAL
@@ -162,6 +171,9 @@ icon: $(OFILES) $(BUILD)/icon.o
 iconArray: $(OFILES) $(BUILD)/iconArray.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
+spriteArchive: $(OFILES) $(BUILD)/spriteArchive.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
 convertfollowpkmn: $(OFILES) $(BUILD)/convertfollowpkmn.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
@@ -173,6 +185,7 @@ clean-binary:
 	@rm pkmnSprite
 	@rm icon
 	@rm iconArray
+	@rm spriteArchive
 	@rm convertfollowpkmn
 	@rm pkmnowsprite2rsd
 
@@ -181,6 +194,7 @@ clean:
 	@rm pkmnSprite
 	@rm icon
 	@rm iconArray
+	@rm spriteArchive
 	@rm convertfollowpkmn
 	@rm pkmnowsprite2rsd
 	@rm pkmn_follow

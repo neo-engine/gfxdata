@@ -33,6 +33,8 @@ int  col_dis( int p_1, int p_2 );
 
 map<string, bitmap> readPictures( const string& p_path );
 
+extern bool DEBUG;
+
 constexpr t3 major( t3 p_1, t3 p_2, t3 p_3, t3 p_4 ) {
     if( p_1 == p_2 || p_1 == p_3 || p_1 == p_4 ) { return p_1; }
     if( p_2 == p_3 || p_2 == p_4 ) { return p_2; }
