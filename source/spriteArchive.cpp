@@ -68,17 +68,23 @@ int main( int p_argc, char** p_argv ) {
         u16 wid = image.m_width / ( 1 + scale );
         u16 hei = image.m_height / ( 1 + scale );
 
+        u16 fr = 1;
+        if( wid == 128 ) {
+            fr  = 2;
+            wid = 64;
+        }
+
         // write image
         printf( "%u %u\n", hei, wid );
         if( transparent != -1 ) {
-            printImage( pal, palidx, f, string( p_argv[ 2 ] ) + " " + name, image, hei, wid, 1,
+            printImage( pal, palidx, f, string( p_argv[ 2 ] ) + " " + name, image, hei, wid, fr,
                         THRESHOLD );
         } else {
-            printImage( f, string( p_argv[ 2 ] ) + " " + name, image, hei, wid, 1, THRESHOLD );
+            printImage( f, string( p_argv[ 2 ] ) + " " + name, image, hei, wid, fr, THRESHOLD );
         }
 
-        spos += ( 16 * sizeof( u16 ) );            // palette data
-        spos += ( hei * wid / 8 ) * sizeof( u32 ); // sprite data
+        spos += ( 16 * sizeof( u16 ) );                 // palette data
+        spos += ( fr * hei * wid / 8 ) * sizeof( u32 ); // sprite data
     }
     fprintf( header, "}\n" );
 

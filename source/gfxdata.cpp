@@ -263,7 +263,7 @@ void printImage( u16 p_pal[ 16 ], u8& p_colorsUsed, FILE* p_out, const string& p
                  const bitmap& p_img, u16 p_height, u16 p_width, u8 p_frames, u8 p_threshold,
                  bool p_rsddata ) {
     size_t SCALE = 1;
-    if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
+    if( p_img.m_width == 2 * p_width * p_frames || p_img.m_height == 2 * p_height ) { SCALE = 2; }
 
     u8 start                                  = 0;
     u8 image_data[ 256 * 256 * 20 / 4 + 100 ] = { 0 };
@@ -369,7 +369,7 @@ void printImage( FILE* p_out, const string& p_name, const bitmap& p_img, u16 p_h
                  u8 p_frames, u8 p_threshold, bool p_rsddata, u16 p_transparent, bool p_palLast ) {
     u8     col   = 0;
     size_t SCALE = 1;
-    if( p_img.m_width == 2 * p_width || p_img.m_height == 2 * p_height ) { SCALE = 2; }
+    if( p_img.m_width == 2 * p_width * p_frames || p_img.m_height == 2 * p_height ) { SCALE = 2; }
 
     u8  start                                  = 0;
     u8  image_data[ 256 * 256 * 20 / 4 + 100 ] = { 0 };
