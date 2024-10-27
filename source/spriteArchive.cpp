@@ -11,7 +11,7 @@
 #include "gfxdata.h"
 
 constexpr u8  THRESHOLD  = 0;
-constexpr u16 STRING_LEN = 100;
+constexpr u16 STRING_LEN = 500;
 
 int main( int p_argc, char** p_argv ) {
     if( p_argc < 3 ) {
@@ -32,7 +32,7 @@ int main( int p_argc, char** p_argv ) {
     assert( f );
     FILE* header = fopen( hname.c_str( ), "wb" );
     assert( header );
-    fprintf( header, "#pragma once\n" );
+    fprintf( header, "#pragma once\n\nnamespace IO::ICON {\n" );
 
     u32  spos = 0;
     char writebuffer[ STRING_LEN + 10 ];
@@ -40,26 +40,47 @@ int main( int p_argc, char** p_argv ) {
     for( auto [ name, image ] : images ) {
         // write image starting position to header
 
-        fprintf( header, "#define " );
+        fprintf( header, "    constexpr u32 " );
 
-        bool scale = false;
-        if( name[ 0 ] == '@' ) { scale = true; }
+        auto pos         = 0;
+        bool scale       = false;
+        auto transparent = -1;
+        u16  pal[ 16 ]   = { };
+        u8   palidx      = 0;
 
+        if( name[ pos ] == '@' ) {
+            scale = true;
+            ++pos;
+        }
         std::memset( writebuffer, 0, sizeof( writebuffer ) );
-        snprintf( writebuffer, 90, "%s", name.c_str( ) + scale );
+        if( name[ pos ] == ':' ) {
+            transparent = 1;
+            snprintf( writebuffer, STRING_LEN, "%s", name.c_str( ) + pos );
+            while( writebuffer[ 0 ] == ':' ) {
+                sscanf( writebuffer + 1, "%x:%s", &pal[ palidx++ ], writebuffer );
+            }
+        } else {
+            snprintf( writebuffer, STRING_LEN, "%s", name.c_str( ) + pos );
+        }
         printNormalized( writebuffer, header );
-        fprintf( header, "_START %hu\n", spos );
+        fprintf( header, "_START = %u;\n", spos );
 
         u16 wid = image.m_width / ( 1 + scale );
         u16 hei = image.m_height / ( 1 + scale );
 
         // write image
         printf( "%u %u\n", hei, wid );
-        printImage( f, string( p_argv[ 2 ] ) + " " + name, image, hei, wid, 1, THRESHOLD );
+        if( transparent != -1 ) {
+            printImage( pal, palidx, f, string( p_argv[ 2 ] ) + " " + name, image, hei, wid, 1,
+                        THRESHOLD );
+        } else {
+            printImage( f, string( p_argv[ 2 ] ) + " " + name, image, hei, wid, 1, THRESHOLD );
+        }
 
         spos += ( 16 * sizeof( u16 ) );            // palette data
         spos += ( hei * wid / 8 ) * sizeof( u32 ); // sprite data
     }
+    fprintf( header, "}\n" );
 
     printf( "%s\n", fname.c_str( ) );
     printf( "%s\n", hname.c_str( ) );

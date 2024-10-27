@@ -12,7 +12,7 @@ FSROOT				?= out/FSROOT/PICS/SPRITES
 OUT					?= out/include
 else
 FSROOT				?= ../../FSROOT/PICS/SPRITES
-OUT					?= ../../arm9/include
+OUT					?= ../neo/PNEO/arm9/include/gen
 endif
 
 CC			=	g++
